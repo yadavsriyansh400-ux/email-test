@@ -17,11 +17,12 @@ const __dirname = path.dirname(__filename);
 const verificationTokens = {};
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp-relay.brevo.com",
+  port: 587,
 
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.BREVO_EMAIL,
+    pass: process.env.BREVO_SMTP_KEY,
   },
 });
 
@@ -31,6 +32,7 @@ app.get("/", (req, res) => {
 
 app.post("/send-verification", async (req, res) => {
   try {
+
     const { email } = req.body;
 
     if (!email) {
@@ -39,20 +41,21 @@ app.post("/send-verification", async (req, res) => {
       });
     }
 
-    
-    const token = crypto.randomBytes(32).toString("hex");
+    const token = crypto
+      .randomBytes(32)
+      .toString("hex");
 
-    
     verificationTokens[token] = email;
 
-    
     const verificationLink =
       `${process.env.BASE_URL}/verify/${token}`;
 
-    
     await transporter.sendMail({
-      from: `"Email Test" <${process.env.EMAIL_USER}>`,
+
+      from: `"Email Test" <${process.env.BREVO_EMAIL}>`,
+
       to: email,
+
       subject: "Verify Your Email",
 
       html: `
@@ -60,6 +63,7 @@ app.post("/send-verification", async (req, res) => {
           font-family: Arial;
           padding: 20px;
         ">
+
           <h2>Email Verification</h2>
 
           <p>
@@ -80,6 +84,7 @@ app.post("/send-verification", async (req, res) => {
           >
             Verify Email
           </a>
+
         </div>
       `,
     });
@@ -106,62 +111,18 @@ app.get("/verify/:token", (req, res) => {
 
   const email = verificationTokens[token];
 
-  
   if (!email) {
 
     return res.send(`
-      <div style="
-        font-family: Arial;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        height:100vh;
-        flex-direction:column;
-      ">
-
-        <h1>❌ Invalid or Expired Token</h1>
-
-      </div>
+      <h1>❌ Invalid or Expired Token</h1>
     `);
   }
 
-  
   delete verificationTokens[token];
 
-  
-  res.send(`
-    <div style="
-      font-family: Arial;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      flex-direction:column;
-      background:#f4f4f4;
-    ">
-
-      <div style="
-        background:white;
-        padding:40px;
-        border-radius:10px;
-        box-shadow:0 0 10px rgba(0,0,0,0.1);
-        text-align:center;
-      ">
-
-        <h1>✅ Email Verified Successfully</h1>
-
-        <p style="margin-top:10px;">
-          ${email}
-        </p>
-
-        <p style="color:gray;">
-          You can now close this tab.
-        </p>
-
-      </div>
-
-    </div>
-  `);
+  res.sendFile(
+    path.join(__dirname, "public", "success.html")
+  );
 });
 
 app.use(express.static("public"));
