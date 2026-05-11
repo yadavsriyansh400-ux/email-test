@@ -57,7 +57,7 @@ app.post("/send-verification", async (req, res) => {
 
     await transporter.sendMail({
 
-      from: `"Email Test" <${process.env.BREVO_EMAIL}>`,
+      from: `"Email Test" <${process.env.SENDER_EMAIL}>`,
 
       to: email,
 
