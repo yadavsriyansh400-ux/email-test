@@ -17,13 +17,18 @@ const __dirname = path.dirname(__filename);
 const verificationTokens = {};
 
 const transporter = nodemailer.createTransport({
+
   host: "smtp-relay.brevo.com",
-  port: 587,
+
+  port: 2525,
+
+  secure: false,
 
   auth: {
     user: process.env.BREVO_EMAIL,
     pass: process.env.BREVO_SMTP_KEY,
   },
+
 });
 
 app.get("/", (req, res) => {
