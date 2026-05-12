@@ -18,52 +18,52 @@ const verificationTokens = {};
 
 const transporter = nodemailer.createTransport({
 
-  host: "smtp-relay.brevo.com",
+    host: "smtp-relay.brevo.com",
 
-  port: 2525,
+    port: 2525,
 
-  secure: false,
+    secure: false,
 
-  auth: {
-    user: process.env.BREVO_EMAIL,
-    pass: process.env.BREVO_SMTP_KEY,
-  },
+    auth: {
+        user: process.env.BREVO_EMAIL,
+        pass: process.env.BREVO_SMTP_KEY,
+    },
 
 });
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.post("/send-verification", async (req, res) => {
-  try {
+    try {
 
-    const { email } = req.body;
+        const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({
-        message: "Email is required",
-      });
-    }
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required",
+            });
+        }
 
-    const token = crypto
-      .randomBytes(32)
-      .toString("hex");
+        const token = crypto
+            .randomBytes(32)
+            .toString("hex");
 
-    verificationTokens[token] = email;
+        verificationTokens[token] = email;
 
-    const verificationLink =
-      `${process.env.BASE_URL}/verify/${token}`;
+        const verificationLink =
+            `${process.env.BASE_URL}/verify/${token}`;
 
-    await transporter.sendMail({
+        await transporter.sendMail({
 
-      from: `"Email Test" <${process.env.SENDER_EMAIL}>`,
+            from: `"Email Test" <${process.env.SENDER_EMAIL}>`,
 
-      to: email,
+            to: email,
 
-      subject: "Verify Your Email",
+            subject: "Verify Your Email",
 
-      html: `
+            html: `
         <div style="
           font-family: Arial;
           padding: 20px;
@@ -92,49 +92,49 @@ app.post("/send-verification", async (req, res) => {
 
         </div>
       `,
-    });
+        });
 
-    console.log("Email sent to:", email);
+        console.log("Email sent to:", email);
 
-    res.status(200).json({
-      message: "Verification email sent successfully",
-    });
+        res.status(200).json({
+            message: "Verification email sent successfully",
+        });
 
-  } catch (error) {
+    } catch (error) {
 
-    console.log("Email Error:", error);
+        console.log("Email Error:", error);
 
-    res.status(500).json({
-      message: "Failed to send email",
-    });
-  }
+        res.status(500).json({
+            message: "Failed to send email",
+        });
+    }
 });
 
 app.get("/verify/:token", (req, res) => {
 
-  const token = req.params.token;
+    const token = req.params.token;
 
-  const email = verificationTokens[token];
+    const email = verificationTokens[token];
 
-  if (!email) {
+    if (!email) {
 
-    return res.send(`
+        return res.send(`
       <h1>❌ Invalid or Expired Token</h1>
     `);
-  }
+    }
 
-  delete verificationTokens[token];
+    delete verificationTokens[token];
 
-  res.sendFile(
-    path.join(__dirname, "public", "success.html")
-  );
+    res.sendFile(
+        path.join(__dirname, "public", "success.html")
+    );
 });
 
 app.use(express.static("public"));
 
 app.listen(process.env.PORT, () => {
 
-  console.log(`
+    console.log(`
 Server running on port ${process.env.PORT}
   `);
 });
