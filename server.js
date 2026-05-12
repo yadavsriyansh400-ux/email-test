@@ -11,16 +11,17 @@ const app = express();
 
 app.use(express.json());
 
+app.use(express.static("public"));
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const verificationTokens = {};
 
 const transporter = nodemailer.createTransport({
 
     host: "smtp-relay.brevo.com",
 
-    port: 2525,
+    port: 587,
 
     secure: false,
 
@@ -31,26 +32,33 @@ const transporter = nodemailer.createTransport({
 
 });
 
+
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+
+    res.sendFile(
+        path.join(__dirname, "public", "index.html")
+    );
+
 });
 
+
 app.post("/send-verification", async (req, res) => {
+
     try {
 
         const { email } = req.body;
 
         if (!email) {
+
             return res.status(400).json({
                 message: "Email is required",
             });
+
         }
 
         const token = crypto
             .randomBytes(32)
             .toString("hex");
-
-        verificationTokens[token] = email;
 
         const verificationLink =
             `${process.env.BASE_URL}/verify/${token}`;
@@ -107,34 +115,23 @@ app.post("/send-verification", async (req, res) => {
         res.status(500).json({
             message: "Failed to send email",
         });
+
     }
+
 });
 
 app.get("/verify/:token", (req, res) => {
 
-    const token = req.params.token;
-
-    const email = verificationTokens[token];
-
-    if (!email) {
-
-        return res.send(`
-      <h1>❌ Invalid or Expired Token</h1>
-    `);
-    }
-
-    delete verificationTokens[token];
-
     res.sendFile(
         path.join(__dirname, "public", "success.html")
     );
+
 });
 
-app.use(express.static("public"));
+const PORT = process.env.PORT || 5000;
 
-app.listen(process.env.PORT, () => {
+app.listen(PORT, () => {
 
-    console.log(`
-Server running on port ${process.env.PORT}
-  `);
+    console.log(`Server running on port ${PORT}`);
+
 });
